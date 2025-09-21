@@ -337,7 +337,7 @@ struct ContactView: View {
     private func dialOut(phoneNumber: String, method: DialMethod, type: DialType) {
         guard !phoneNumber.isEmpty else { return }
         
-        let cleanNumber = phoneNumber.replacingOccurrences(of: " ", with: "")
+        let cleanNumber = phoneNumber.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "+", with: "")
         var urlString: String
         
         switch method {
@@ -346,7 +346,7 @@ struct ContactView: View {
         case .whatsapp:
             switch type {
             case .voice:
-                urlString = "whatsapp://call?phone=\(cleanNumber)"
+                urlString = "whatsapp://calluser/?phone=\(cleanNumber)"
             case .video:
                 urlString = "whatsapp://video?phone=\(cleanNumber)"
             case .text:
@@ -369,8 +369,13 @@ struct ContactView: View {
             urlString = "viber://chat?number=\(cleanNumber)"
         }
         
+        print("📞 Dialing \(method.rawValue) - \(type.rawValue): \(urlString)")
+        
         if let url = URL(string: urlString) {
+            print("✅ Opening \(method.rawValue) URL: \(urlString)")
             UIApplication.shared.open(url)
+        } else {
+            print("❌ Invalid URL format: \(urlString)")
         }
     }
 }
@@ -397,21 +402,70 @@ struct ContentView: View {
         dialType2: .voice
     )
     
+    @State private var urlString = ""
+    
     var body: some View {
         NavigationView {
             ScrollView {
-                HStack(spacing: 0) {
-                    // Contact 1 - Left Half
-                    ContactView(contact: $contact1, contactNumber: 1)
-                        .frame(maxWidth: .infinity, minHeight: UIScreen.main.bounds.height * 0.8)
+                VStack(spacing: 20) {
+                    // Contacts Section
+                    HStack(spacing: 0) {
+                        // Contact 1 - Left Half
+                        ContactView(contact: $contact1, contactNumber: 1)
+                            .frame(maxWidth: .infinity, minHeight: UIScreen.main.bounds.height * 0.6)
+                        
+                        Divider()
+                            .background(Color.gray)
+                        
+                        // Contact 2 - Right Half
+                        ContactView(contact: $contact2, contactNumber: 2)
+                            .frame(maxWidth: .infinity, minHeight: UIScreen.main.bounds.height * 0.6)
+                    }
                     
-                    Divider()
-                        .background(Color.gray)
-                    
-                    // Contact 2 - Right Half
-                    ContactView(contact: $contact2, contactNumber: 2)
-                        .frame(maxWidth: .infinity, minHeight: UIScreen.main.bounds.height * 0.8)
+                    // URL Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "globe")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+                            Text("URL Opener")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                        }
+                        .padding(.bottom, 8)
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Enter URL:")
+                                .font(.headline)
+                            TextField("https://example.com", text: $urlString)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .keyboardType(.URL)
+                                .autocapitalization(.none)
+                                .disableAutocorrection(true)
+                        }
+                        
+                        Button(action: {
+                            hideKeyboard()
+                            openURL()
+                        }) {
+                            HStack {
+                                Image(systemName: "safari.fill")
+                                Text("Open in Safari")
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(urlString.isEmpty ? Color.gray : Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                        }
+                        .disabled(urlString.isEmpty)
+                    }
+                    .padding()
+                    .background(Color(.systemBackground))
+                    .cornerRadius(12)
+                    .shadow(radius: 2)
                 }
+                .padding()
             }
             .navigationTitle("Contact Dialer")
             .navigationBarTitleDisplayMode(.inline)
@@ -446,6 +500,26 @@ struct ContentView: View {
            contacts.count >= 2 {
             contact1 = contacts[0]
             contact2 = contacts[1]
+        }
+    }
+    
+    private func openURL() {
+        guard !urlString.isEmpty else { return }
+        
+        var urlToOpen = urlString
+        
+        // Add https:// if no protocol is specified
+//        if !urlToOpen.hasPrefix("http://") && !urlToOpen.hasPrefix("https://") {
+//            urlToOpen = "https://\(urlToOpen)"
+//        }
+        
+        print("🌐 Opening URL: \(urlToOpen)")
+        
+        if let url = URL(string: urlToOpen) {
+            print("✅ URL is valid, opening in Safari...")
+            UIApplication.shared.open(url)
+        } else {
+            print("❌ Invalid URL format: \(urlToOpen)")
         }
     }
 }

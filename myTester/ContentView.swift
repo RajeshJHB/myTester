@@ -337,7 +337,8 @@ struct ContactView: View {
     private func dialOut(phoneNumber: String, method: DialMethod, type: DialType) {
         guard !phoneNumber.isEmpty else { return }
         
-        let cleanNumber = phoneNumber.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "+", with: "")
+        let cleanNumber = phoneNumber.replacingOccurrences(of: " ", with: "")
+        let cleanNumber_wa = phoneNumber.replacingOccurrences(of: " ", with: "").replacingOccurrences(of: "+", with: "")
         var urlString: String
         
         switch method {
@@ -346,14 +347,21 @@ struct ContactView: View {
         case .whatsapp:
             switch type {
             case .voice:
-                urlString = "whatsapp://calluser/?phone=\(cleanNumber)"
+                urlString = "whatsapp://calluser/?phone=\(cleanNumber_wa)"
             case .video:
-                urlString = "whatsapp://video?phone=\(cleanNumber)"
+                urlString = "whatsapp://video?phone=\(cleanNumber_wa)"
             case .text:
-                urlString = "whatsapp://send?phone=\(cleanNumber)"
+                urlString = "whatsapp://send?phone=\(cleanNumber_wa)"
             }
         case .telegram:
-            urlString = "tg://resolve?domain=\(cleanNumber)"
+            switch type {
+            case .voice:
+                urlString = "tg://resolve?domain=\(cleanNumber)"
+            case .video:
+                urlString = "tg://resolve?domain=\(cleanNumber)"
+            case .text:
+                urlString = "tg://resolve?domain=\(cleanNumber)"
+            }
         case .facetime:
             switch type {
             case .voice:
